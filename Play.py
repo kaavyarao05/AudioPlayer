@@ -3,18 +3,56 @@ from tkinter import filedialog
 import pygame
 from typing_extensions import Self
 import os
+from enum import Enum
+
+class buttonState(Enum):
+    IDLE=0,  #pass
+    TOCLICKPREV=1  #can set the first song
+    TOCLICKPOST=2  #can set the song to play after clickedSong
+curState=buttonState.IDLE
 
 class Song:
-    data=0
-    next:Self
-    def __init__(self,data):
-        self.data=data
+    button:Button
+    next:Self #Self is class, self is object
+    songName:str
+    def __init__(self,root,txt):
+        self.songName=txt
+        self.button=Button(root,text=txt,command=self.clicked)
         self.next=None
+    def clicked(self):
+        match(curState):
+            case buttonState.IDLE:
+                pass
+            case buttonState.TOCLICKPREV:
+                changeState(buttonState.TOCLICKPOST,self)
+            case buttonState.TOCLICKPOST:
+                changeState(buttonState.TOCLICKPREV,self)
 
+def changeState(newstate:buttonState,newsong:Song=None):
+    global curState
+    curState=newstate
+    match(curState):
+            case buttonState.IDLE:
+                updateLabel("Select a Song to play")
+            case buttonState.TOCLICKPOST:
+                global clickedSong
+                updateLabel("Click on song to play after "+newsong.songName)
+                clickedSong=newsong
+            case buttonState.TOCLICKPREV:
+                if newsong:
+                    updateLabel("{songName} will play after {old}".format(songName=newsong.songName,old=clickedSong.songName))
+                else:
+                    updateLabel("Select Song to link")
+
+def updateLabel(newtext:str):
+    global txt
+    txt=newtext
+
+clickedSong:Song
 
 root =Tk()
 root.title('Music Player')
-root.geometry("500x300")
+root.geometry("500x320")
 
 pygame.mixer.init()
 
@@ -36,6 +74,14 @@ def load_music():
         playlist.insert("end",song)
     playlist.selection_set(0)
     currentsong=songs[playlist.curselection()[0]]
+
+
+def toggleEditList():
+    if curState==buttonState.IDLE:
+        changeState(buttonState.TOCLICKPREV)
+    else:
+        changeState(buttonState.IDLE)
+    
 
 def play_music():
     global currentsong,paused
@@ -64,7 +110,6 @@ def next_music():
 
 def prev_music():
     global currentsong,paused
-
     try:
         playlist.select_clear(0,END)
         playlist.selection_set(songs.index(currentsong)-1)
@@ -76,6 +121,7 @@ def prev_music():
 
 organise_menu=Menu(menubar,tearoff=False)
 organise_menu.add_command(label="Select Folder",command=load_music)
+organise_menu.add_command(label="Toggle Edit",command=toggleEditList)
 menubar.add_cascade(label="Organise",menu=organise_menu)
 
 playlist=Listbox(root,bg="black",fg="white",width=100,height=15)
@@ -90,12 +136,26 @@ pause_btn=Button(control_frame,text="Pause",borderwidth=0,command=pause_music)
 prev_btn=Button(control_frame,text="Prev",borderwidth=0,command=prev_music)
 next_btn=Button(control_frame,text="Next",borderwidth=0,command=next_music)
 
-play_btn.grid(row=0,column=1,padx=7,pady=10)
-pause_btn.grid(row=0,column=2,padx=7,pady=10)
-prev_btn.grid(row=0,column=0,padx=7,pady=10)
-next_btn.grid(row=0,column=3,padx=7,pady=10)
 
 
+play_btn.grid(row=1,column=1,padx=7,pady=10)
+pause_btn.grid(row=1,column=2,padx=7,pady=10)
+prev_btn.grid(row=1,column=0,padx=7,pady=10)
+next_btn.grid(row=1,column=3,padx=7,pady=10)
 
 
+txt=""
+label=Label(control_frame,text=txt)
+label.grid(row=0,columnspan=4)
+
+#s1=Song(control_frame,"s1")
+#s1.button.grid(row=2)
+
+def update():
+    global txt
+    label.config(text=txt)
+    root.after(500,update)
+
+changeState(buttonState.IDLE)
+update()
 root.mainloop()
