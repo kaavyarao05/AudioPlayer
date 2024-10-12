@@ -14,10 +14,14 @@ curState=buttonState.IDLE
 class Song:
     button:Button
     next:Self #Self is class, self is object
+    prev:Self
     songName:str
-    def __init__(self,root,txt):
+    path:str
+    def __init__(self,root,txt,path):
         self.songName=txt
+        self.path=path
         self.button=Button(root,text=txt,command=self.clicked)
+        self.prev=None
         self.next=None
     def clicked(self):
         match(curState):
@@ -59,22 +63,32 @@ pygame.mixer.init()
 menubar=Menu(root)
 root.config(menu=menubar)
 
+start:Song=None
 songs=[]
-currentsong:str
+currentsong:Song
 paused=False
 
-def load_music():
+def createNode(path,name):
+    global start
+    if start:
+        new=Song(playlist,name,path)
+        ptr=start
+        while ptr.next!=None:
+            ptr.next.prev=ptr
+            ptr=ptr.next
+        ptr.next=new
+        new.prev=ptr
+    else:
+        start=Song(playlist,name,path)
+
+def load():
     global currentsong
     root.directory=filedialog.askdirectory()
     for song in os.listdir(root.directory):
         name,ext=os.path.splitext(song)
         if ext==".mp3":
-            songs.append(song)
-    for song in songs:
-        playlist.insert("end",song)
-    playlist.selection_set(0)
-    currentsong=songs[playlist.curselection()[0]]
-
+            createNode(song,name)
+    currentsong=start
 
 def toggleEditList():
     if curState==buttonState.IDLE:
@@ -86,7 +100,7 @@ def toggleEditList():
 def play_music():
     global currentsong,paused
     if not paused:
-        pygame.mixer.music.load(os.path.join(root.directory,currentsong))
+        pygame.mixer.music.load(os.path.join(root.directory,currentsong.path))
         pygame.mixer.music.play()
     else:
         pygame.mixer.unpause()
@@ -99,28 +113,18 @@ def pause_music():
 
 def next_music():
     global paused,currentsong
-
-    try:
-        playlist.selection_clear(0,END)
-        playlist.selection_set(songs.index(currentsong)+1)
-        currentsong=songs[playlist.curselection()[0]]
+    if currentsong:
+        currentsong=currentsong.next
         play_music()
-    except:
-        pass
 
 def prev_music():
-    global currentsong,paused
-    try:
-        playlist.select_clear(0,END)
-        playlist.selection_set(songs.index(currentsong)-1)
-        currentsong=songs[playlist.curselection()[0]]
+    global paused,currentsong
+    if currentsong:
+        currentsong=currentsong.prev
         play_music()
-    except:
-        pass
-
 
 organise_menu=Menu(menubar,tearoff=False)
-organise_menu.add_command(label="Select Folder",command=load_music)
+organise_menu.add_command(label="Select Folder",command=load)
 organise_menu.add_command(label="Toggle Edit",command=toggleEditList)
 menubar.add_cascade(label="Organise",menu=organise_menu)
 
