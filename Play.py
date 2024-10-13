@@ -44,6 +44,7 @@ def changeState(newstate:buttonState,newsong:Song=None):
     curState=newstate
     match(curState):
             case buttonState.IDLE:
+                unpause_music()
                 updateLabel("Select a Song to play")
             case buttonState.TOCLICKPOST:
                 global clickedSong
@@ -54,11 +55,11 @@ def changeState(newstate:buttonState,newsong:Song=None):
                     setNext(clickedSong,newsong)
                     updateLabel("{songName} will play after {old}".format(songName=newsong.songName,old=clickedSong.songName))
                 else:
+                    pause_music()
                     updateLabel("Select Song to link")
 
 def updateLabel(newtext:str):
-    global txt
-    txt=newtext
+    label.config(text=newtext)
 
 clickedSong:Song
 
@@ -115,11 +116,16 @@ def toggleEditList():
 def play_music():
     global currentsong,paused
     if not paused:
+        updateLabel("Currently playing: {}".format(currentsong.songName))
         pygame.mixer.music.load(os.path.join(root.directory,currentsong.path))
         pygame.mixer.music.play()
     else:
-        pygame.mixer.unpause()
-        paused=False
+        unpause_music()
+
+def unpause_music():
+    global paused
+    pygame.mixer.music.unpause()
+    paused=False
 
 def pause_music():
     global paused
@@ -143,6 +149,9 @@ organise_menu.add_command(label="Select Folder",command=load)
 organise_menu.add_command(label="Toggle Edit",command=toggleEditList)
 menubar.add_cascade(label="Organise",menu=organise_menu)
 
+label=Label(root)
+label.pack()
+
 canvas=Canvas(root,bg="black",width=500,height=250)
 canvas.pack()
 
@@ -155,19 +164,25 @@ pause_btn=Button(control_frame,text="Pause",borderwidth=0,command=pause_music)
 prev_btn=Button(control_frame,text="Prev",borderwidth=0,command=prev_music)
 next_btn=Button(control_frame,text="Next",borderwidth=0,command=next_music)
 
+vol=DoubleVar()
+newvol=DoubleVar()
+volslider = Scale(control_frame,variable=newvol,from_=1,to=100,orient = HORIZONTAL)
+volslider.set(50)
+volslider.grid(row=0,columnspan=4)
+
 play_btn.grid(row=1,column=1,padx=7,pady=10)
 pause_btn.grid(row=1,column=2,padx=7,pady=10)
 prev_btn.grid(row=1,column=0,padx=7,pady=10)
 next_btn.grid(row=1,column=3,padx=7,pady=10)
 
-txt=""
-label=Label(control_frame,text=txt)
-label.grid(row=0,columnspan=4)
+def set_volume():
+    pygame.mixer.music.set_volume(vol.get()/100)
 
 def update():
-    global txt
-    label.config(text=txt)
-    root.after(500,update)
+    if vol.get()!=newvol.get():        
+        vol.set(newvol.get())
+        set_volume()
+    root.after(1000,update)
 
 changeState(buttonState.IDLE)
 update()
