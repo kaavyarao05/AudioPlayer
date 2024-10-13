@@ -33,7 +33,7 @@ class Song:
             case buttonState.TOCLICKPOST:
                 changeState(buttonState.TOCLICKPREV,self)
     def setButton(self):
-        self.button=Button(canvas,text=self.songName,command=self.clicked)
+        self.button=Button(canvasframe,text=self.songName,command=self.clicked)
         fitInGrid(self.button)
     def destroyButton(self):
         self.button.destroy()
@@ -159,35 +159,57 @@ def playlistClicked(playlist:PlayList):
     changePlaylist(playlist)
 
 def play_music():
-    global currentsong,paused
-    if not paused:
-        updateLabel("Currently playing: {}".format(currentsong.songName))
-        pygame.mixer.music.load(os.path.join(currentplaylist.path,currentsong.path))
-        pygame.mixer.music.play()
+        global currentsong,paused
+        if not paused:
+            updateLabel("Currently playing: {}".format(currentsong.songName))
+            pygame.mixer.music.load(os.path.join(currentplaylist.path,currentsong.path))
+            pygame.mixer.music.play()
+        else:
+            unpause_music()
+
+def updateLabelTemporarily(newtext,time=1500):
+    oldtext=label['text']
+    updateLabel(newtext)
+    root.after(time,lambda:updateLabel(oldtext))
+
+def buttoncheck()->bool:
+    if curState==buttonState.IDLE:
+        if currentsong:
+            return True
+        else:
+            updateLabelTemporarily("Select Playlist in Organise")
+            return False
     else:
-        unpause_music()
+        updateLabel("In Edit Mode")
+        return False
 
 def unpause_music():
-    global paused
-    pygame.mixer.music.unpause()
-    paused=False
+        global paused
+        if currentsong:updateLabel("Currently playing: {}".format(currentsong.songName))
+        pygame.mixer.music.unpause()
+        paused=False
 
 def pause_music():
-    global paused
-    pygame.mixer.music.pause()
-    paused=True
+        global paused
+        updateLabel("Paused")
+        pygame.mixer.music.pause()
+        paused=True
 
 def next_music():
-    global paused,currentsong
-    if currentsong:
-        currentsong=currentsong.next
-        play_music()
+        global paused,currentsong
+        if currentsong.next:
+            currentsong=currentsong.next
+            play_music()
+        else:
+            updateLabelTemporarily("Nothing next")
 
 def prev_music():
-    global paused,currentsong
-    if currentsong:
-        currentsong=currentsong.prev
-        play_music()
+        global paused,currentsong
+        if currentsong.prev:
+            currentsong=currentsong.prev
+            play_music()
+        else:
+            updateLabelTemporarily("Nothing previous")
 
 organise_menu=Menu(menubar,tearoff=False)
 organise_menu.add_command(label="Load Playlist",command=load_playlist)
@@ -205,15 +227,35 @@ label.pack()
 
 canvas=Canvas(root,bg="black",width=500,height=250)
 canvas.pack()
+canvasframe=Frame(root,bg="black")
+canvasframe.place(x=250, y=25, anchor=N)
+canvasframe.pack_propagate(False)
+
+def play_clicked():
+    if buttoncheck():
+        play_music()
+
+def pause_clicked():
+    if buttoncheck():
+        pause_music()
+
+def next_clicked():
+    if buttoncheck():
+        next_music()
+
+def prev_clicked():
+    if buttoncheck():
+        prev_music()
+
 
 control_frame=Frame(root)
 control_frame.pack()
 
-play_btn=Button(control_frame,text="Play",borderwidth=0,command=play_music)
-pause_btn=Button(control_frame,text="Pause",borderwidth=0,command=pause_music)
+play_btn=Button(control_frame,text="Play",borderwidth=0,command=play_clicked)
+pause_btn=Button(control_frame,text="Pause",borderwidth=0,command=pause_clicked)
 
-prev_btn=Button(control_frame,text="Prev",borderwidth=0,command=prev_music)
-next_btn=Button(control_frame,text="Next",borderwidth=0,command=next_music)
+prev_btn=Button(control_frame,text="Prev",borderwidth=0,command=prev_clicked)
+next_btn=Button(control_frame,text="Next",borderwidth=0,command=next_clicked)
 
 volslider = Scale(control_frame,from_=1,to=100,orient = HORIZONTAL,command=set_vol)
 volslider.set(50)
