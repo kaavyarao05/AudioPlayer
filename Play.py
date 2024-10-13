@@ -162,7 +162,7 @@ def play_music():
     global currentsong,paused
     if not paused:
         updateLabel("Currently playing: {}".format(currentsong.songName))
-        pygame.mixer.music.load_playlist(os.path.join(currentplaylist.path,currentsong.path))
+        pygame.mixer.music.load(os.path.join(currentplaylist.path,currentsong.path))
         pygame.mixer.music.play()
     else:
         unpause_music()
