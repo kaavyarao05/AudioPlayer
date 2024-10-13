@@ -9,7 +9,7 @@ class buttonState(Enum):
     IDLE=0,  #pass
     TOCLICKPREV=1  #can set the first song
     TOCLICKPOST=2  #can set the song to play after clickedSong
-curState=buttonState.IDLE
+curState:buttonState
 
 class Song:
     button:Button
@@ -21,16 +21,23 @@ class Song:
         self.songName=txt
         self.path=path
         self.button=Button(root,text=txt,command=self.clicked)
+        fitInGrid(self.button)
         self.prev=None
         self.next=None
     def clicked(self):
         match(curState):
             case buttonState.IDLE:
-                pass
+                global currentsong
+                currentsong=self
+                play_music()
             case buttonState.TOCLICKPREV:
                 changeState(buttonState.TOCLICKPOST,self)
             case buttonState.TOCLICKPOST:
                 changeState(buttonState.TOCLICKPREV,self)
+
+def setNext(song:Song,next:Song):
+    song.next=next
+    next.prev=song
 
 def changeState(newstate:buttonState,newsong:Song=None):
     global curState
@@ -44,6 +51,7 @@ def changeState(newstate:buttonState,newsong:Song=None):
                 clickedSong=newsong
             case buttonState.TOCLICKPREV:
                 if newsong:
+                    setNext(clickedSong,newsong)
                     updateLabel("{songName} will play after {old}".format(songName=newsong.songName,old=clickedSong.songName))
                 else:
                     updateLabel("Select Song to link")
@@ -68,10 +76,17 @@ songs=[]
 currentsong:Song
 paused=False
 
+gridrow=0
+gridcol=0
+def fitInGrid(songButton:Button):
+    global gridcol,gridrow
+    songButton.grid(row=gridrow)
+    gridrow+=1
+
 def createNode(path,name):
     global start
     if start:
-        new=Song(playlist,name,path)
+        new=Song(canvas,name,path)
         ptr=start
         while ptr.next!=None:
             ptr.next.prev=ptr
@@ -79,7 +94,7 @@ def createNode(path,name):
         ptr.next=new
         new.prev=ptr
     else:
-        start=Song(playlist,name,path)
+        start=Song(canvas,name,path)
 
 def load():
     global currentsong
@@ -128,8 +143,8 @@ organise_menu.add_command(label="Select Folder",command=load)
 organise_menu.add_command(label="Toggle Edit",command=toggleEditList)
 menubar.add_cascade(label="Organise",menu=organise_menu)
 
-playlist=Listbox(root,bg="black",fg="white",width=100,height=15)
-playlist.pack()
+canvas=Canvas(root,bg="black",width=500,height=250)
+canvas.pack()
 
 control_frame=Frame(root)
 control_frame.pack()
@@ -140,20 +155,14 @@ pause_btn=Button(control_frame,text="Pause",borderwidth=0,command=pause_music)
 prev_btn=Button(control_frame,text="Prev",borderwidth=0,command=prev_music)
 next_btn=Button(control_frame,text="Next",borderwidth=0,command=next_music)
 
-
-
 play_btn.grid(row=1,column=1,padx=7,pady=10)
 pause_btn.grid(row=1,column=2,padx=7,pady=10)
 prev_btn.grid(row=1,column=0,padx=7,pady=10)
 next_btn.grid(row=1,column=3,padx=7,pady=10)
 
-
 txt=""
 label=Label(control_frame,text=txt)
 label.grid(row=0,columnspan=4)
-
-#s1=Song(control_frame,"s1")
-#s1.button.grid(row=2)
 
 def update():
     global txt
