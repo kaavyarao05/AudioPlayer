@@ -35,6 +35,14 @@ class Song:
             case buttonState.TOCLICKPOST:
                 changeState(buttonState.TOCLICKPREV,self)
 
+class PlayList:
+    PlaylistName:str
+    path:str
+    start:Song
+
+def set_vol(val):
+    pygame.mixer.music.set_volume(float(val)/100)
+
 def setNext(song:Song,next:Song):
     song.next=next
     next.prev=song
@@ -164,9 +172,7 @@ pause_btn=Button(control_frame,text="Pause",borderwidth=0,command=pause_music)
 prev_btn=Button(control_frame,text="Prev",borderwidth=0,command=prev_music)
 next_btn=Button(control_frame,text="Next",borderwidth=0,command=next_music)
 
-vol=DoubleVar()
-newvol=DoubleVar()
-volslider = Scale(control_frame,variable=newvol,from_=1,to=100,orient = HORIZONTAL)
+volslider = Scale(control_frame,from_=1,to=100,orient = HORIZONTAL,command=set_vol)
 volslider.set(50)
 volslider.grid(row=0,columnspan=4)
 
@@ -175,15 +181,5 @@ pause_btn.grid(row=1,column=2)
 prev_btn.grid(row=1,column=0)
 next_btn.grid(row=1,column=3)
 
-def set_volume():
-    pygame.mixer.music.set_volume(vol.get()/100)
-
-def update():
-    if vol.get()!=newvol.get():        
-        vol.set(newvol.get())
-        set_volume()
-    root.after(1000,update)
-
 changeState(buttonState.IDLE)
-update()
 root.mainloop()
