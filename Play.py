@@ -65,7 +65,7 @@ clickedSong:Song
 
 root =Tk()
 root.title('Music Player')
-root.geometry("500x320")
+root.geometry("500x360")
 
 pygame.mixer.init()
 
@@ -170,10 +170,10 @@ volslider = Scale(control_frame,variable=newvol,from_=1,to=100,orient = HORIZONT
 volslider.set(50)
 volslider.grid(row=0,columnspan=4)
 
-play_btn.grid(row=1,column=1,padx=7,pady=10)
-pause_btn.grid(row=1,column=2,padx=7,pady=10)
-prev_btn.grid(row=1,column=0,padx=7,pady=10)
-next_btn.grid(row=1,column=3,padx=7,pady=10)
+play_btn.grid(row=1,column=1)
+pause_btn.grid(row=1,column=2)
+prev_btn.grid(row=1,column=0)
+next_btn.grid(row=1,column=3)
 
 def set_volume():
     pygame.mixer.music.set_volume(vol.get()/100)
