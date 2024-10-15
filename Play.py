@@ -69,7 +69,7 @@ def changeState(newstate:buttonState,newsong:Song=None):
             case buttonState.TOCLICKPREV:
                 if newsong:
                     setNext(clickedSong,newsong)
-                    updateLabel("{songName} will play after {old}".format(songName=newsong.songName,old=clickedSong.songName))
+                    updateLabelTemporarily("{songName} will play after {old}".format(songName=newsong.songName,old=clickedSong.songName))
                 else:
                     pause_music()
                     updateLabel("Select Song to link")
@@ -141,7 +141,7 @@ def load_playlist():
         
         for songpath in os.listdir(playlist.path):
             name,ext=os.path.splitext(songpath)
-            if ext==".mp3":
+            if ext==".mp3" or ext==".wav":
                 createNode(songpath,name,playlist)
         currentsong=playlist.start
         addPlaylistToMenu(playlist)
@@ -268,5 +268,14 @@ next_btn.grid(row=1,column=3)
 
 changeState(buttonState.IDLE)
 
+SONG_END = pygame.USEREVENT + 1
+pygame.mixer.music.set_endevent(SONG_END)
+pygame.init()
+
 if __name__=="__main__":
     root.mainloop()
+    while True:
+        for event in pygame.event.get():
+            if event.type == SONG_END:
+                next_clicked()
+    

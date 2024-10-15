@@ -1,0 +1,12 @@
+Title: Kuruoze
+URL: https://www.youtube.com/watch?v=qj1GooBp0ss
+Path: C:\projects\soundthing\UnderTheTree\Kuruoze.mp3
+
+Title: RuLe
+URL: https://www.youtube.com/watch?v=0Z_YqhYHhpg
+Path: C:\projects\soundthing\UnderTheTree\RuLe.mp3
+
+Title: FUZI × Mili - Birthday Kid
+URL: https://www.youtube.com/watch?v=j0gDBT_Kow4
+Path: FUZI × Mili - Birthday Kid.wav
+
